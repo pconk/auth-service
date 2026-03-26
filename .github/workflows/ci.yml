@@ -1,0 +1,63 @@
+name: Go Continuous Integration
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: rootpassword
+          MYSQL_DATABASE: warehouse_auth
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24' # Menggunakan versi stabil terbaru
+          cache: true
+
+      - name: Install Protobuf Compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y protobuf-compiler
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+
+      - name: Generate gRPC Code
+        run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          protoc --go_out=. --go_opt=paths=source_relative \
+                 --go-grpc_out=. --go-grpc_opt=paths=source_relative \
+                 proto/auth.proto
+
+      - name: Verify Dependencies
+        run: go mod verify
+
+      - name: Run Tests
+        run: go test -v ./...
+        env:
+          DB_DSN: "root:rootpassword@tcp(127.0.0.1:3306)/warehouse_auth?charset=utf8mb4&parseTime=True&loc=Local"
+          JWT_SECRET: "ci-test-secret"
+          HTTP_PORT: "8081"
+          GRPC_PORT: "50051"
+
+      - name: Build Application
+        run: go build -v -o auth-service cmd/api/main.go

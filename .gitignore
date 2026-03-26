@@ -1,0 +1,30 @@
+# Binaries for programs and plugins
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Dependency directories
+vendor/
+
+# Test coverage files
+*.out
+*.prof
+cover.out
+coverage.html
+
+# IDE and tool configurations
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment variables (SANGAT PENTING!)
+.env
+*-ignore*
+
+# Database/Log files
+*.log
+data/

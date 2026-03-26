@@ -1,0 +1,32 @@
+### 1. Register User Baru (Admin)
+POST http://localhost:8081/auth/register
+Content-Type: application/json
+
+{
+  "username": "admin_gudang",
+  "password": "password123",
+  "email": "admin@warehouse.com",
+  "role": "admin",
+  "position": "Head of Warehouse"
+}
+
+### 2. Login (Admin) -> Copy Token dari response untuk test gRPC
+POST http://localhost:8081/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin_gudang",
+  "password": "password123"
+}
+
+### 3. Register User Baru (Staff)
+POST http://localhost:8081/auth/register
+Content-Type: application/json
+
+{
+  "username": "staff_budi",
+  "password": "password123",
+  "email": "budi@warehouse.com",
+  "role": "staff",
+  "position": "Inbound Staff"
+}

@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package auth;
+option go_package = "auth-service/internal/pb";
+
+service AuthService {
+  // Digunakan oleh Gateway untuk verifikasi setiap request
+  rpc ValidateToken(ValidateTokenRequest) returns (UserResponse);
+  
+  // Digunakan oleh Gateway/Audit untuk mendapatkan detail user berdasarkan ID
+  rpc GetUserProfile(GetUserRequest) returns (UserResponse);
+}
+
+message ValidateTokenRequest {
+  string token = 1;
+}
+
+message GetUserRequest {
+  int32 id = 1;
+}
+
+message UserResponse {
+  int32 id = 1;
+  string username = 2;
+  string role = 3; // admin, staff
+  string position = 4; // e.g. Senior Warehouse Manager
+  string email = 5;
+}
