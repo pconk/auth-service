@@ -2,6 +2,7 @@ package handler
 
 import (
 	"auth-service/internal/helper"
+	"auth-service/internal/middleware"
 	"auth-service/internal/service"
 	"encoding/json"
 	"net/http"
@@ -50,11 +51,13 @@ func (h *AuthHTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := h.Service.Login(req.Username, req.Password)
+	claims, token, err := h.Service.Login(req.Username, req.Password)
 	if err != nil {
 		helper.SendResponse(w, http.StatusUnauthorized, "Unauthorized", "Invalid credentials", nil)
 		return
 	}
+
+	middleware.AddUserToLog(r.Context(), claims.UserID, claims.Username, claims.Role)
 
 	helper.SendResponse(w, http.StatusOK, "OK", "Login successful", map[string]string{
 		"token": token,

@@ -79,9 +79,8 @@ func main() {
 		logger.Error("failed to listen grpc", "error", err)
 		os.Exit(1)
 	}
-	grpcServer := grpc.NewServer()
 	grpcLoggerInterceptor := middleware.NewGrpcLoggerInterceptor(logger)
-	grpcServer = grpc.NewServer(grpc.ChainUnaryInterceptor(grpcLoggerInterceptor.Unary()))
+	grpcServer := grpc.NewServer(grpc.ChainUnaryInterceptor(grpcLoggerInterceptor.Unary()))
 	pb.RegisterAuthServiceServer(grpcServer, grpcHandler)
 
 	go func() {

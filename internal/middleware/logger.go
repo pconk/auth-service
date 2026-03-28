@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"time"
@@ -11,7 +12,39 @@ import (
 
 type contextKey string
 
-const RequestIDKey contextKey = "requestID"
+const (
+	LogFieldsKey contextKey = "log_fields"
+	RequestIDKey contextKey = "requestID"
+)
+
+// AddLogFields memungkinkan middleware lain menambahkan field ke log utama
+func AddLogFields(ctx context.Context, fields ...slog.Attr) {
+	if v, ok := ctx.Value(LogFieldsKey).(*[]slog.Attr); ok {
+		*v = append(*v, fields...)
+	}
+}
+
+func AddUserToLog(ctx context.Context, userID int64, username, role string) {
+	AddLogFields(ctx,
+		slog.String("user_id", fmt.Sprintf("%d", userID)),
+		slog.String("username", username),
+		slog.String("role", role))
+}
+
+// CreateTraceGroup menggabungkan request_id dan field tambahan ke dalam satu grup log trace
+func CreateTraceGroup(requestID string, extraFields []slog.Attr) slog.Attr {
+	traceAttrs := make([]any, 0, len(extraFields)+1)
+	traceAttrs = append(traceAttrs, slog.String("request_id", requestID))
+	for _, attr := range extraFields {
+		traceAttrs = append(traceAttrs, attr)
+	}
+	return slog.Group("trace", traceAttrs...)
+}
+
+// DurationToMs mengonversi time.Duration menjadi float64 milidetik
+func DurationToMs(d time.Duration) float64 {
+	return float64(d.Nanoseconds()) / 1e6
+}
 
 // responseWriter wrapper untuk menangkap status code
 type responseWriter struct {
@@ -38,20 +71,34 @@ func Logger(logger *slog.Logger) func(http.Handler) http.Handler {
 			// 3. Masukkan Request ID ke Context agar bisa dipakai di Handler/DB
 			ctx := context.WithValue(r.Context(), RequestIDKey, requestID)
 
+			// Siapkan wadah untuk log tambahan (username, warehouse_id, dll)
+			var extraFields []slog.Attr
+			ctx = context.WithValue(ctx, LogFieldsKey, &extraFields)
+
 			// 4. Wrap ResponseWriter
 			wrapped := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
 
 			// 5. Jalankan Handler berikutnya
 			next.ServeHTTP(wrapped, r.WithContext(ctx))
 
+			// Tentukan level log berdasarkan status code
+			level := slog.LevelInfo
+			if wrapped.statusCode >= 400 && wrapped.statusCode < 500 {
+				level = slog.LevelWarn
+			} else if wrapped.statusCode >= 500 {
+				level = slog.LevelError
+			}
+
 			// 6. Log Terstruktur dengan slog + Request ID
-			logger.Info("HTTP Request",
-				"request_id", requestID,
-				"method", r.Method,
-				"path", r.URL.Path,
-				"status", wrapped.statusCode,
-				"duration", time.Since(start),
-				"ip", r.RemoteAddr,
+			logger.LogAttrs(r.Context(), level, "HTTP Request",
+				CreateTraceGroup(requestID, extraFields),
+				slog.Group("http",
+					slog.String("method", r.Method),
+					slog.String("path", r.URL.Path),
+					slog.Int("status", wrapped.statusCode),
+					slog.String("ip", r.RemoteAddr),
+					slog.Float64("duration_ms", DurationToMs(time.Since(start))),
+				),
 			)
 		})
 	}

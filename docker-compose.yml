@@ -8,6 +8,8 @@ services:
       MYSQL_DATABASE: warehouse_auth
     ports:
       - "3306:3306"
+    volumes:
+      - ./scripts:/docker-entrypoint-initdb.d # Otomatis eksekusi SQL saat startup
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
       interval: 10s

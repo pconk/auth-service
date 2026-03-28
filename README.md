@@ -93,7 +93,7 @@ Project menggunakan pendekatan **Clean Architecture** untuk memisahkan logika bi
 **Internal Endpoints (gRPC - Port 50051)**
 | RPC              | Request              | Description                               |
 | :--------------- | :------------------- | :---------------------------------------- |
-| `ValidateToken`  | `TokenRequest`       | Memverifikasi JWT dan return user info    |
+| `ValidateToken`  | `ValidateTokenRequest` | Memverifikasi JWT dan return user info    |
 | `GetUserProfile` | `GetUserRequest`     | Mengambil detail user berdasarkan ID      |
 
 #### Example Responses

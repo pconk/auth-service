@@ -9,7 +9,7 @@ import (
 type UserRepository interface {
 	Create(user *entity.User) error
 	FindByUsername(username string) (*entity.User, error)
-	FindByID(id int) (*entity.User, error)
+	FindByID(id int64) (*entity.User, error)
 }
 
 type userRepository struct {
@@ -32,7 +32,7 @@ func (r *userRepository) FindByUsername(username string) (*entity.User, error) {
 	return &user, nil
 }
 
-func (r *userRepository) FindByID(id int) (*entity.User, error) {
+func (r *userRepository) FindByID(id int64) (*entity.User, error) {
 	var user entity.User
 	if err := r.db.First(&user, id).Error; err != nil {
 		return nil, err

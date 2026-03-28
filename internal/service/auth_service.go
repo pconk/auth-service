@@ -13,9 +13,9 @@ import (
 
 type AuthService interface {
 	Register(username, password, email, role, position string) error
-	Login(username, password string) (string, error) // Returns JWT Token
+	Login(username, password string) (*CustomClaims, string, error) // Returns JWT Token
 	ValidateToken(tokenString string) (*CustomClaims, error)
-	GetUserByID(id int) (*entity.User, error)
+	GetUserByID(id int64) (*entity.User, error)
 }
 
 type authService struct {
@@ -24,7 +24,7 @@ type authService struct {
 }
 
 type CustomClaims struct {
-	UserID   int    `json:"user_id"`
+	UserID   int64  `json:"user_id"`
 	Username string `json:"username"` // Menambahkan username
 	Role     string `json:"role"`
 	jwt.RegisteredClaims
@@ -55,15 +55,15 @@ func (s *authService) Register(username, password, email, role, position string)
 	return s.repo.Create(user)
 }
 
-func (s *authService) Login(username, password string) (string, error) {
+func (s *authService) Login(username, password string) (*CustomClaims, string, error) {
 	user, err := s.repo.FindByUsername(username)
 	if err != nil {
-		return "", errors.New("invalid credentials")
+		return nil, "", errors.New("invalid credentials")
 	}
 
 	// Compare Hash
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
-		return "", errors.New("invalid credentials")
+		return nil, "", errors.New("invalid credentials")
 	}
 
 	// Generate JWT
@@ -78,7 +78,8 @@ func (s *authService) Login(username, password string) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(s.jwtSecret)
+	tokenResult, err := token.SignedString(s.jwtSecret)
+	return &claims, tokenResult, err
 }
 
 func (s *authService) ValidateToken(tokenString string) (*CustomClaims, error) {
@@ -100,6 +101,6 @@ func (s *authService) ValidateToken(tokenString string) (*CustomClaims, error) {
 	return nil, errors.New("invalid token")
 }
 
-func (s *authService) GetUserByID(id int) (*entity.User, error) {
+func (s *authService) GetUserByID(id int64) (*entity.User, error) {
 	return s.repo.FindByID(id)
 }
