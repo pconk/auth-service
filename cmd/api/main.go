@@ -51,6 +51,7 @@ func main() {
 	// 5. Setup HTTP Server
 	r := chi.NewRouter()
 
+	r.Use(chimiddleware.RequestID)
 	// Gunakan Logger custom kita
 	r.Use(middleware.Logger(logger))
 	// Gunakan Recoverer bawaan Chi
