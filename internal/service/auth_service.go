@@ -16,6 +16,7 @@ type AuthService interface {
 	Login(username, password string) (*CustomClaims, string, error) // Returns JWT Token
 	ValidateToken(tokenString string) (*CustomClaims, error)
 	GetUserByID(id int64) (*entity.User, error)
+	GetUsersByIDs(ids []int64) ([]entity.User, error)
 }
 
 type authService struct {
@@ -103,4 +104,8 @@ func (s *authService) ValidateToken(tokenString string) (*CustomClaims, error) {
 
 func (s *authService) GetUserByID(id int64) (*entity.User, error) {
 	return s.repo.FindByID(id)
+}
+
+func (s *authService) GetUsersByIDs(ids []int64) ([]entity.User, error) {
+	return s.repo.FindByIDs(ids)
 }

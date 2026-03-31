@@ -30,6 +30,18 @@ Write-Host "`n--- 2. Testing gRPC: GetUserProfile (ID=1) ---" -ForegroundColor C
 # Mengambil data user dengan ID 1
 grpcurl -plaintext -proto $ProtoFile -d '{\"id\": 1}' $GrpcAddress auth.AuthService/GetUserProfile
 
+Write-Host "`n--- 2b. Testing gRPC: GetUsersByIds (ID=[1,3,11]) ---" -ForegroundColor Cyan
+# Mengambil data user dengan ID 1
+grpcurl -plaintext -proto $ProtoFile -d '{\"ids\": [1,3,11]}' $GrpcAddress auth.AuthService/GetUsersByIds
+
+Write-Host "`n--- 2c. Testing gRPC: GetUsersByIds (ID=[10,11]) --- test id tidak ketemu" -ForegroundColor Cyan
+# Mengambil data user dengan ID 1
+grpcurl -plaintext -proto $ProtoFile -d '{\"ids\": [10,11]}' $GrpcAddress auth.AuthService/GetUsersByIds
+
+Write-Host "`n--- 2d. Testing gRPC: GetUsersByIds (ID=[]) --- " -ForegroundColor Cyan
+# Mengambil data user dengan ID 1
+grpcurl -plaintext -proto $ProtoFile -d '{\"ids\": []}' $GrpcAddress auth.AuthService/GetUsersByIds
+
 Write-Host "`n--- 3. Testing gRPC: ValidateToken ---" -ForegroundColor Cyan
 # Memvalidasi token yang barusan didapat dari login
 # Kita harus menyusun JSON string dengan hati-hati untuk PowerShell

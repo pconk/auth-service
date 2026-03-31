@@ -18,5 +18,5 @@ CREATE TABLE users (
 
 -- Data Dummy (Password default: 'password123' - harus di-hash di aplikasi)
 INSERT INTO users (username, password_hash, email, role, position) VALUES 
-('admin_gudang', '$2a$10$ExK06zL1.7abcde...', 'admin@warehouse.com', 'admin', 'Head of Warehouse'),
-('staff_joko', '$2a$10$ExK06zL1.7abcde...', 'joko@warehouse.com', 'staff', 'Inventory Clerk');
+('admin_gudang', '$2a$10$J0.dcliYCQ.AraN.K6WTMuwwTh37PByfpVLVMQ767jtTRvHHqfnrq', 'admin@warehouse.com', 'admin', 'Head of Warehouse'),
+('staff_budi', '$2a$10$KPZARoLuzbRhR3fMRfo1Gug41AzkwS/phtdbm5ii5rlyT6bC7qHYm', 'budi@warehouse.com', 'staff', 'Inbound Staff');

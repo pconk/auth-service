@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	AuthService_ValidateToken_FullMethodName  = "/auth.AuthService/ValidateToken"
 	AuthService_GetUserProfile_FullMethodName = "/auth.AuthService/GetUserProfile"
+	AuthService_GetUsersByIds_FullMethodName  = "/auth.AuthService/GetUsersByIds"
 )
 
 // AuthServiceClient is the client API for AuthService service.
@@ -31,6 +32,7 @@ type AuthServiceClient interface {
 	ValidateToken(ctx context.Context, in *ValidateTokenRequest, opts ...grpc.CallOption) (*UserResponse, error)
 	// Digunakan oleh Gateway/Audit untuk mendapatkan detail user berdasarkan ID
 	GetUserProfile(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*UserResponse, error)
+	GetUsersByIds(ctx context.Context, in *GetUsersRequest, opts ...grpc.CallOption) (*UsersResponse, error)
 }
 
 type authServiceClient struct {
@@ -61,6 +63,16 @@ func (c *authServiceClient) GetUserProfile(ctx context.Context, in *GetUserReque
 	return out, nil
 }
 
+func (c *authServiceClient) GetUsersByIds(ctx context.Context, in *GetUsersRequest, opts ...grpc.CallOption) (*UsersResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UsersResponse)
+	err := c.cc.Invoke(ctx, AuthService_GetUsersByIds_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AuthServiceServer is the server API for AuthService service.
 // All implementations must embed UnimplementedAuthServiceServer
 // for forward compatibility.
@@ -69,6 +81,7 @@ type AuthServiceServer interface {
 	ValidateToken(context.Context, *ValidateTokenRequest) (*UserResponse, error)
 	// Digunakan oleh Gateway/Audit untuk mendapatkan detail user berdasarkan ID
 	GetUserProfile(context.Context, *GetUserRequest) (*UserResponse, error)
+	GetUsersByIds(context.Context, *GetUsersRequest) (*UsersResponse, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
 
@@ -84,6 +97,9 @@ func (UnimplementedAuthServiceServer) ValidateToken(context.Context, *ValidateTo
 }
 func (UnimplementedAuthServiceServer) GetUserProfile(context.Context, *GetUserRequest) (*UserResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetUserProfile not implemented")
+}
+func (UnimplementedAuthServiceServer) GetUsersByIds(context.Context, *GetUsersRequest) (*UsersResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetUsersByIds not implemented")
 }
 func (UnimplementedAuthServiceServer) mustEmbedUnimplementedAuthServiceServer() {}
 func (UnimplementedAuthServiceServer) testEmbeddedByValue()                     {}
@@ -142,6 +158,24 @@ func _AuthService_GetUserProfile_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuthService_GetUsersByIds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUsersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).GetUsersByIds(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthService_GetUsersByIds_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).GetUsersByIds(ctx, req.(*GetUsersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AuthService_ServiceDesc is the grpc.ServiceDesc for AuthService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -156,6 +190,10 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUserProfile",
 			Handler:    _AuthService_GetUserProfile_Handler,
+		},
+		{
+			MethodName: "GetUsersByIds",
+			Handler:    _AuthService_GetUsersByIds_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -5,6 +5,7 @@ import (
 	"auth-service/internal/pb" // Pastikan package ini ada setelah generate protobuf
 	"auth-service/internal/service"
 	"context"
+	"fmt"
 )
 
 type AuthGRPCHandler struct {
@@ -45,5 +46,36 @@ func (h *AuthGRPCHandler) GetUserProfile(ctx context.Context, req *pb.GetUserReq
 		Role:     user.Role,
 		Position: user.Position,
 		Email:    user.Email,
+	}, nil
+}
+
+func (h *AuthGRPCHandler) GetUsersByIds(ctx context.Context, req *pb.GetUsersRequest) (*pb.UsersResponse, error) {
+	if len(req.Ids) == 0 {
+		return nil, fmt.Errorf("Invalid Ids - empty")
+	}
+
+	users, err := h.Service.GetUsersByIDs(req.Ids)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(users) == 0 {
+		return nil, fmt.Errorf("Ids not found")
+	}
+
+	// middleware.AddUserToLog(ctx, req.Id, user.Username, user.Role)
+	results := make([]*pb.UserResponse, len(users))
+	for i, user := range users {
+		results[i] = &pb.UserResponse{
+			Id:       user.ID,
+			Username: user.Username,
+			Role:     user.Role,
+			Position: user.Position,
+			Email:    user.Email,
+		}
+	}
+
+	return &pb.UsersResponse{
+		Users: results,
 	}, nil
 }

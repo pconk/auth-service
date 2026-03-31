@@ -9,6 +9,7 @@ service AuthService {
   
   // Digunakan oleh Gateway/Audit untuk mendapatkan detail user berdasarkan ID
   rpc GetUserProfile(GetUserRequest) returns (UserResponse);
+  rpc GetUsersByIds(GetUsersRequest) returns (UsersResponse);
 }
 
 message ValidateTokenRequest {
@@ -19,10 +20,18 @@ message GetUserRequest {
   int64 id = 1;
 }
 
+message GetUsersRequest {
+  repeated int64 ids = 1;
+}
+
 message UserResponse {
   int64 id = 1;
   string username = 2;
   string role = 3; // admin, staff
   string position = 4; // e.g. Senior Warehouse Manager
   string email = 5;
+}
+
+message UsersResponse {
+  repeated UserResponse users= 1;
 }
